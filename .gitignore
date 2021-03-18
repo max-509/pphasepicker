@@ -1,0 +1,5 @@
+*build/
+*.bin
+*.00
+*.rar
+*.png
