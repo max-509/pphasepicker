@@ -31,6 +31,10 @@ namespace pphase_picker {
 		SM, WM, NA
 	};
 
+	enum class function_jump_finder_type : long {
+		HIST, SIGMA
+	};
+
 	template<typename Func>
 	struct lambda_as_visitor_wrapper : Func {
 		explicit lambda_as_visitor_wrapper(const Func& f) : Func(f) {}
@@ -56,6 +60,7 @@ namespace pphase_picker {
 		pphase_picker_result calculate(const Map<VectorX<T>>& x,
 			double undamped_period,
 			double damping_ratio,
+			function_jump_finder_type finder_type,
 			std::size_t bin_size,
 			const bool to_peak) {
 
@@ -105,20 +110,31 @@ namespace pphase_picker {
 			VectorX<T> d_energy_damping = C * velocity.cwiseAbs2();
 
 			double loc = -1.0;
-			typename VectorX<T>::Index pick = get_pick(d_energy_damping,
-				signal,
-				bin_size);
+			typename VectorX<T>::Index pick;
+			switch (finder_type) {
+			case pphase_picker::function_jump_finder_type::HIST:
+				pick = get_pick_hist(d_energy_damping, signal, bin_size);
 
-			if (pick == -1) {
-				pick = get_pick(d_energy_damping,
-					signal,
-					std::ceil(static_cast<double>(bin_size) / 2.0));
+				if (pick == -1) {
+					pick = get_pick_hist(d_energy_damping,
+						signal,
+						std::ceil(static_cast<double>(bin_size) / 2.0));
+					if (pick != -1) {
+						loc = static_cast<double>(pick + 1) * dt_;
+					}
+				}
+				else {
+					loc = static_cast<double>(pick + 1) * dt_;
+				}
+				break;
+			case pphase_picker::function_jump_finder_type::SIGMA:
+				pick = get_pick_sigma(d_energy_damping);
 				if (pick != -1) {
 					loc = static_cast<double>(pick + 1) * dt_;
 				}
-			}
-			else {
-				loc = static_cast<double>(pick + 1) * dt_;
+				break;
+			default:
+				break;
 			}
 
 			double snr = -1.0;
@@ -224,7 +240,7 @@ namespace pphase_picker {
 		}
 
 		template<typename T>
-		typename VectorX<T>::Index get_pick(const VectorX<T>& d_energy_damping,
+		typename VectorX<T>::Index get_pick_hist(const VectorX<T>& d_energy_damping,
 			const VectorX<T>& signal,
 			std::size_t bin_size) {
 
@@ -249,6 +265,24 @@ namespace pphase_picker {
 			}
 
 			return pick;
+		}
+
+		template <typename T>
+		typename VectorX<T>::Index get_pick_sigma(const VectorX<T>& d_energy_damping) {
+			auto n_d_energy_damping = d_energy_damping.size();
+			T d_energy_damping_mean = d_energy_damping.mean();
+			T d_energy_damping_std = std::sqrt((d_energy_damping.squaredNorm() / n_d_energy_damping) - std::pow(d_energy_damping_mean, 2));
+
+			typename VectorX<T>::Index p_wave_begin = -1;
+
+			for (typename VectorX<T>::Index i = 0; i < n_d_energy_damping; ++i) {
+				if (std::abs(d_energy_damping_mean - d_energy_damping[i]) > d_energy_damping_std) {
+					p_wave_begin = i;
+					break;
+				}
+			}
+
+			return p_wave_begin;
 		}
 
 		template<typename T>

@@ -19,6 +19,7 @@ pphase_picker_calculate(PyObject *self, PyObject *args, PyObject *kwargs) {
 										"flhp",
 										"Tn",
 										"xi",
+										"jump_finder",
 										"nbins",
 										"to_peak",
 										nullptr};
@@ -30,8 +31,9 @@ pphase_picker_calculate(PyObject *self, PyObject *args, PyObject *kwargs) {
 	double Tn = -1;
 	double damping_ratio = 0.6;
 	unsigned long nbins = 0;
+	function_jump_finder_type finder_type = function_jump_finder_type::HIST;
 	int to_peak_i = 1;
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Od|$Oddkp", const_cast<char**>(kwargs_names), &signal_o, &dt, &flhp_o, &Tn, &damping_ratio, &nbins, &to_peak_i)) {
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Od|$Oddlkp", const_cast<char**>(kwargs_names), &signal_o, &dt, &flhp_o, &Tn, &damping_ratio, &finder_type, &nbins, &to_peak_i)) {
 		return nullptr;
 	}
 
@@ -82,6 +84,7 @@ pphase_picker_calculate(PyObject *self, PyObject *args, PyObject *kwargs) {
 	pphase_picker_result res = pphase_picker_calculator.calculate<double>(signal_map,
 																Tn,
 																damping_ratio,
+																finder_type,
 																nbins,
 																to_peak);
 
@@ -116,6 +119,8 @@ PyInit_PphasePicker() {
     CompError = PyErr_NewException("compute.error", nullptr, nullptr);
     Py_INCREF(CompError);
     PyModule_AddObject(m, "error", CompError);
+	PyModule_AddObject(m, "HIST_FINDER", PyLong_FromLong(static_cast<long>(function_jump_finder_type::HIST)));
+	PyModule_AddObject(m, "SIGMA_FINDER", PyLong_FromLong(static_cast<long>(function_jump_finder_type::SIGMA)));
 
     return m;
 }
