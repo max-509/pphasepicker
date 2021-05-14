@@ -1,12 +1,12 @@
-#ifndef PPHASEPICKER_BUTTERWORTH_BANDPASS_H
-#define PPHASEPICKER_BUTTERWORTH_BANDPASS_H
+#ifndef BUTTERWORTH_BANDPASS_H
+#define BUTTERWORTH_BANDPASS_H
 
-#define _USE_MATH_DEFINES
+#include "common.h"
 
-#include <cstddef>
+#include <memory>
 #include <cstdlib>
 
-namespace pphase_picker {
+namespace phase_picker {
 
     struct butter_bandpass_coefficients {
         double *dcof = nullptr;
@@ -37,7 +37,7 @@ namespace pphase_picker {
     double sf_bwbp( int n, double f1f, double f2f );
     double sf_bwbs( int n, double f1f, double f2f );
 
-    butter_bandpass_coefficients *bwbp_args(int n, double f1f, double f2f);
+    std::unique_ptr<butter_bandpass_coefficients> bwbp_args(int n, double f1f, double f2f);
 }
 
-#endif //PPHASEPICKER_BUTTERWORTH_BANDPASS_H
+#endif //BUTTERWORTH_BANDPASS_H

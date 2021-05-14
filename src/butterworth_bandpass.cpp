@@ -1,12 +1,13 @@
 #include "butterworth_bandpass.h"
 
+#include "common.h"
+
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <algorithm>
 
-
-namespace pphase_picker {
+namespace phase_picker {
     /**********************************************************************
   binomial_mult - multiplies a series of binomials together and returns
   the coefficients of the resulting polynomial.
@@ -543,35 +544,26 @@ namespace pphase_picker {
         return( 1.0 / sfr );
     }
 
-    butter_bandpass_coefficients *bwbp_args(int n, double f1f, double f2f) {
-        butter_bandpass_coefficients *res = new butter_bandpass_coefficients();
+    auto bwbp_args(int n, double f1f, double f2f) -> std::unique_ptr<butter_bandpass_coefficients> {
+        std::unique_ptr<butter_bandpass_coefficients> res_p(new butter_bandpass_coefficients());
+
         double *dcof;
         double *ccof;
         double sf;
 
+        res_p->n = n;
+
         dcof = dcof_bwbp(n, f1f, f2f);
-        if( dcof == nullptr )
-        {
-            std::cerr << "Unable to calculate d coefficients" << std::endl;
-            return nullptr;
-        }
+        res_p->dcof = dcof;
         ccof = ccof_bwbp(n);
-        if( ccof == nullptr )
-        {
-            std::cerr << "Unable to calculate c coefficients" << std::endl;
-            return nullptr;
-        }
+        res_p->ccof = ccof;
 
         sf = sf_bwbp(n, f1f, f2f);
 
-        std::transform(ccof, ccof + 2*n+1, ccof,
+        std::transform(ccof, ccof + 2*static_cast<std::ptrdiff_t>(n)+1, ccof,
                        [sf] (double c) { return c*sf; });
 
-        res->dcof = dcof;
-        res->ccof = ccof;
-        res->n = n;
-
-        return res;
+        return std::move(res_p);
 
     }
 
