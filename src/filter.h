@@ -43,15 +43,15 @@ namespace phase_picker {
         static FiltFiltButter<n> create_butterworth_bandpass_filter(double dt,
                                                                     double flp,
                                                                     double fhp) {
-			const auto fnq = 1.0 / (2.0 * dt);
+            const auto fnq = 1.0 / (2.0 * dt);
 
-			const auto uhf = fhp / fnq;
-			const auto lhf = flp / fnq;
+            const auto uhf = fhp / fnq;
+            const auto lhf = flp / fnq;
 
-			auto p_picker_coeffs = bwbp_args(n, lhf, uhf);
+            auto p_picker_coeffs = bwbp_args(n, lhf, uhf);
 
-			return FiltFiltButter<n>(p_picker_coeffs->ccof, p_picker_coeffs->dcof);
-		}
+            return FiltFiltButter<n>(p_picker_coeffs->ccof, p_picker_coeffs->dcof);
+        }
 
         template<typename T>
         VectorX<T> filtfilt(const VectorX<T>& signal) {

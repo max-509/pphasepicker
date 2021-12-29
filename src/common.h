@@ -13,7 +13,6 @@ namespace phase_picker
 
 	template <typename T>
 	using idx_t = typename VectorX<T>::Index;
-
 }
 
 #endif //COMMON_H

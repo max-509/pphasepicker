@@ -361,7 +361,10 @@ namespace phase_picker {
         if( ccof == nullptr ) return( nullptr );
 
         tcof = ccof_bwhp(n);
-        if( tcof == nullptr ) return( nullptr );
+        if( tcof == nullptr ) {
+            free(ccof);
+            return( nullptr );
+        }
 
         for( i = 0; i < n; ++i)
         {
